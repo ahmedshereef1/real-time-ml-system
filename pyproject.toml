@@ -5,7 +5,12 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "loguru>=0.7.3",
+    "pydantic>=2.12.5",
     "quixstreams>=3.23.4",
+    "requests>=2.32.3",
+    "risingwave-py",
+    "websocket-client>=1.8.0",
 ]
 
 [tool.uv.workspace]
