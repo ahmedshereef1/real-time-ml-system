@@ -309,6 +309,7 @@ dependencies = [
     { name = "quixstreams" },
     { name = "requests" },
     { name = "risingwave-py" },
+    { name = "trades" },
     { name = "websocket-client" },
 ]
 
@@ -319,6 +320,7 @@ requires-dist = [
     { name = "quixstreams", specifier = ">=3.23.4" },
     { name = "requests", specifier = ">=2.32.3" },
     { name = "risingwave-py" },
+    { name = "trades", editable = "services/trades" },
     { name = "websocket-client", specifier = ">=1.8.0" },
 ]
 

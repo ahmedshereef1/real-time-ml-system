@@ -2,6 +2,7 @@
 from quixstreams import Application
 from kraken_rest_api import KafkaResetAPI, Trade
 from loguru import logger
+from trades.config import config
 
 
 def run(kafka_broker_address: str, kafka_topic_name: str, kraken_api: KafkaResetAPI):
@@ -29,17 +30,19 @@ def run(kafka_broker_address: str, kafka_topic_name: str, kraken_api: KafkaReset
                     value=message.value,
                     # key=message.key
                 )
-                logger.info(f"Produced message to tpoic {topic.name}")
+                # logger.info(f"Produced message to tpoic {topic.name}")
+                logger.info(f"Trade {event.to_dict()} pushed to Kafa")
 
             # breakpoint()
 
 
 if __name__ == "__main__":
     # Create object that can talk to kraken API and get us the trade data in real time
-    api = KafkaResetAPI(product_ids=["BTC/EUR"])
+    api = KafkaResetAPI(product_ids=config.product_ids)
 
     run(
-        kafka_broker_address="localhost:31234",
-        kafka_topic_name="trades",
+        # kafka_broker_address="localhost:31234",
+        kafka_broker_address=config.kafka_broker_address,
+        kafka_topic_name=config.kafka_topic_name,
         kraken_api=api,
     )
