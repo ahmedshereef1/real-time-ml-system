@@ -1,10 +1,9 @@
 # Create an Application instance with Kafka configs
+from kraken_rest_api import KafkaResetAPI, Trade
 from loguru import logger
 from quixstreams import Application
 
 from trades.config import config
-
-from .kraken_rest_api import KafkaResetAPI, Trade
 
 
 def run(kafka_broker_address: str, kafka_topic_name: str, kraken_api: KafkaResetAPI):

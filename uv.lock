@@ -12,6 +12,7 @@ resolution-markers = [
 
 [manifest]
 members = [
+    "candles",
     "crypto-predictor-system",
     "trades",
 ]
@@ -76,6 +77,11 @@ sdist = { url = "https://files.pythonhosted.org/packages/a1/cc/eb3fd22f3b96b8b70
 wheels = [
     { url = "https://files.pythonhosted.org/packages/83/bc/72adfb3f2ed19eb0317f89ea9b1eeccc670ae46bc394ec2c4ba1dd8c22b7/cachetools-7.0.4-py3-none-any.whl", hash = "sha256:0c8bb1b9ec8194fa4d764accfde602dfe52f70d0f311e62792d4c3f8c051b1e9", size = 13900, upload-time = "2026-03-08T21:37:15.805Z" },
 ]
+
+[[package]]
+name = "candles"
+version = "0.1.0"
+source = { editable = "services/candles" }
 
 [[package]]
 name = "certifi"
