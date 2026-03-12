@@ -1,7 +1,8 @@
 # Create an Application instance with Kafka configs
-from quixstreams import Application
 from kraken_rest_api import KafkaResetAPI, Trade
 from loguru import logger
+from quixstreams import Application
+
 from trades.config import config
 
 
@@ -9,7 +10,7 @@ def run(kafka_broker_address: str, kafka_topic_name: str, kraken_api: KafkaReset
     app = Application(broker_address=kafka_broker_address)
 
     # Define a topic "my_topic" with JSON serialization
-    topic = app.topic(name=kafka_topic_name, value_serializer="json")
+    topic = app.topic(name=kafka_topic_name, value_serializer='json')
 
     # Create a Producer instance
     with app.get_producer() as producer:
@@ -31,12 +32,12 @@ def run(kafka_broker_address: str, kafka_topic_name: str, kraken_api: KafkaReset
                     # key=message.key
                 )
                 # logger.info(f"Produced message to tpoic {topic.name}")
-                logger.info(f"Trade {event.to_dict()} pushed to Kafa")
+                logger.info(f'Trade {event.to_dict()} pushed to Kafa')
 
             # breakpoint()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     # Create object that can talk to kraken API and get us the trade data in real time
     api = KafkaResetAPI(product_ids=config.product_ids)
 
