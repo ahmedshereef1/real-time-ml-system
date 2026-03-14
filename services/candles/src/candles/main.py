@@ -45,6 +45,7 @@ def run(
     kafka_broker_address: str,
     kafka_input_topic: str,
     kafka_output_topic: str,
+    kafka_consumer_group: str,
     # candles parameters
     candle_seconds: int,
     emit_intermediate_candles: bool = True,
@@ -61,6 +62,7 @@ def run(
         kafka_broker_address (str): the address of the Kafka broker to connect to
         kafka_input_topic (str): the name of the Kafka topic to read input data from
         kafka_output_topic (str): the name of the Kafka topic to write output candles to
+        kafka_consumer_group (str): the name of the Kafka consumer group
         candle_seconds (int): the duration of each candle in seconds
         emit_intermediate_candles (bool): whether to emit intermediate candles
     Returns:
@@ -68,6 +70,7 @@ def run(
     """
     app = Application(
         broker_address=kafka_broker_address,  # Kafka broker address
+        consumer_group=kafka_consumer_group,
     )
 
     # Input topic
@@ -139,5 +142,6 @@ if __name__ == '__main__':
         kafka_broker_address=config.kafka_broker_address,
         kafka_input_topic=config.kafka_input_topic,
         kafka_output_topic=config.kafka_output_topic,
+        kafka_consumer_group=config.kafka_consumer_group,
         candle_seconds=config.candle_seconds,
     )
