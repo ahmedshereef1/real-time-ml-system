@@ -23,7 +23,10 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices('CANDLE_SECONDS', 'candle_seconds')
     )
 
-    # max_candles_in_state: int = 70
+    max_candles_in_state: int = Field(
+        validation_alias=AliasChoices('MAX_CANDLES_IN_STATE', 'max_candles_in_state'),
+        default=70,
+    )
 
 
 config = Settings()
