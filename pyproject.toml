@@ -17,6 +17,11 @@ dependencies = [
     "websocket-client>=1.8.0",
 ]
 
+[project.optional-dependencies]
+talib = [
+    "ta-lib>=0.6.8"
+]
+
 [tool.uv.workspace]
 members = [
     "services/trades",

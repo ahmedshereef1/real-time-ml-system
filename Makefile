@@ -5,22 +5,18 @@
 dev: 
 	uv run services/$(service)/src/$(service)/main.py
 
-push-for-dev:
-	kind load docker-image ${service}:dev --name rwml-34fa
-
 build-for-dev:
 	docker build -t ${service}:dev -f docker/${service}.Dockerfile .
 
-deploy: build-for-dev push-for-dev
+run: build-for-dev
+	docker run -it ${service}:dev
+
+push-for-dev:
+	kind load docker-image ${service}:dev --name rwml-34fa
+
+deploy-for-dev: build-for-dev push-for-dev
+	kubectl delete -f deployments/dev/${service}/${service}-d.yaml --ignore-not-found=true
 	kubectl apply -f deployments/dev/${service}/${service}-d.yaml
-	kubectl rollout restart deployment/${service}
-	@echo "Cleaning up old import images from kind cluster..."
-	-docker exec rwml-34fa-control-plane sh -c "crictl images | grep 'import-' | awk '{print \$$3}' | xargs -r crictl rmi" 2>/dev/null || true
-	@echo "Cleaning up dangling Docker images..."
-	-docker image prune -f
-	@echo "Cleaning up build cache..."
-	-docker builder prune -f --filter "until=24h"
-	@echo "Cleanup complete!"
 
 ############################################################################
 ## Production
