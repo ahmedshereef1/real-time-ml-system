@@ -27,10 +27,10 @@ echo "Installing Kafka UI..."
 chmod +x ./install_kafka_ui.sh
 ./install_kafka_ui.sh
 
-# # 7. Install RisingWave
-# echo "Installing RisingWave..."
-# chmod 755 ./install_risingwave.sh
-# ./install_risingwave.sh
+# 7. Install RisingWave
+echo "Installing RisingWave..."
+chmod 755 ./install_risingwave.sh
+./install_risingwave.sh
 
 # # 8. Install Grafana
 # echo "Installing Grafana..."
