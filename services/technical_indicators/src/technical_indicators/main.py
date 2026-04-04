@@ -72,6 +72,16 @@ def run(
 if __name__ == '__main__':
     from technical_indicators.config import config
 
+    # In a real world project, you will have tens/hundreds of table you need to migrate,
+    # so it is better to use tools like the ones you see here
+    # > https://github.com/vajol/python-data-engineering-resources/blob/main/resources/db-migration.md
+    #
+    # create_table_in_risingwave(
+    #     table_name=config.table_name_in_risingwave,
+    #     kafka_broker_address=config.kafka_broker_address,
+    #     kafka_topic=config.kafka_output_topic,
+    # )
+
     run(
         kafka_broker_address=config.kafka_broker_address,
         kafka_input_topic=config.kafka_input_topic,

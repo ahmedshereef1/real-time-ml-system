@@ -28,5 +28,8 @@ class Settings(BaseSettings):
         default=70,
     )
 
+    # TODO: if you prefer, do not set a default value for this field
+    table_name_in_risingwave: str = 'technical_indicators'
+
 
 config = Settings()
