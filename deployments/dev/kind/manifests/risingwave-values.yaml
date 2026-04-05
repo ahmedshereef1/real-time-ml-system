@@ -97,6 +97,8 @@ minio:
   image:
     debug: true
 
+  replicaCount: 1
+
   mode: standalone
 
   defaultBuckets: "risingwave, mlflow-d971"

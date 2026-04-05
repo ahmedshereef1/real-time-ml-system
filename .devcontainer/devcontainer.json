@@ -121,7 +121,7 @@
     "postCreateCommand": "bash .devcontainer/postCreateCommand.sh",
 
     // 11. Use 'postStartCommand' to run a command each time the container starts successfully.
-    "postStartCommand": "git config --global --add safe.directory /app",
+    "postStartCommand": "git config --global --add safe.directory /app"
 
     // 12. Use 'postAttachCommand' to run a command each time a tool attaches to the container successfully.
     // "postAttachCommand": "",
