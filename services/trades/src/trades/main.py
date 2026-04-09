@@ -1,12 +1,18 @@
 # Create an Application instance with Kafka configs
-from kraken_rest_api import KafkaResetAPI, Trade
 from loguru import logger
 from quixstreams import Application
 
 from trades.config import config
+from trades.kraken_rest_api import KrakenRestAPI, KrakenRestMultiAPI
+from trades.kraken_websocket_api import krakenWebsocketAPI
+from trades.trade import Trade
 
 
-def run(kafka_broker_address: str, kafka_topic_name: str, kraken_api: KafkaResetAPI):
+def run(
+    kafka_broker_address: str,
+    kafka_topic_name: str,
+    kraken_api: krakenWebsocketAPI | KrakenRestAPI | KrakenRestMultiAPI,
+):
     app = Application(broker_address=kafka_broker_address)
 
     # Define a topic "my_topic" with JSON serialization
@@ -14,7 +20,7 @@ def run(kafka_broker_address: str, kafka_topic_name: str, kraken_api: KafkaReset
 
     # Create a Producer instance
     with app.get_producer() as producer:
-        while True:
+        while not kraken_api.is_done():
             # Define an event to be produced
             events: list[Trade] = kraken_api.get_trades()
 
@@ -32,7 +38,20 @@ def run(kafka_broker_address: str, kafka_topic_name: str, kraken_api: KafkaReset
 
 if __name__ == '__main__':
     # Create object that can talk to kraken API and get us the trade data in real time
-    api = KafkaResetAPI(product_ids=config.product_ids)
+    if config.live_or_historical == 'live':
+        logger.info('Using live data from Kraken API')
+        api = krakenWebsocketAPI(product_ids=config.product_ids)
+
+    elif config.live_or_historical == 'historical':
+        logger.info('Using historical data from Kraken API for all configured products')
+        api = KrakenRestMultiAPI(
+            product_ids=config.product_ids,
+            last_n_days=config.last_n_days,
+        )
+    else:
+        raise ValueError(
+            'Invalid value for live_or_historical. Must be "live" or "historical".'
+        )
 
     run(
         # kafka_broker_address="localhost:31234",

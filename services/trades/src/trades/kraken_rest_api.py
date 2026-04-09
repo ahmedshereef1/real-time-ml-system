@@ -1,99 +1,122 @@
 import json
+import time
 
+import requests
 from loguru import logger
-from pydantic import BaseModel
-from websocket import create_connection
+
+from trades.trade import Trade
 
 
-class Trade(BaseModel):
-    product_id: str
-    price: float
-    quantity: float
-    timestamp: str
+class KrakenRestAPI:
+    URL = 'https://api.kraken.com/0/public/Trades'
 
-    def to_dict(self) -> dict:
-        return self.model_dump()
+    def __init__(self, product_id: str, last_n_days: int):
+        self.product_id = product_id
+        self.last_n_days = last_n_days
+        self._is_done = False
 
-
-class KafkaResetAPI:
-    URL = 'wss://ws.kraken.com/v2'
-
-    def __init__(self, product_ids: list[str]):
-        self.product_ids = product_ids
-
-        # Create a websoket client
-        self._ws_client = create_connection(self.URL)
-
-        #
-        self._subscribe(self.product_ids)
+        # get current timestamp in nanoseconds
+        self.since_timestamp_ns = int(
+            time.time_ns() - last_n_days * 24 * 60 * 60 * 1000000000
+        )
 
     def get_trades(self) -> list[Trade]:
-        data: str = self._ws_client.recv()
+        """
+        Sends a GET request to the Kraken API to get the trades for the given product_id
+        and since the given timestamp
 
-        if 'heartbeat' in data:
-            logger.info('Heartbeat received')
+        Returns:
+            list[Trade]: List of trades for the given product_id and since the given timestamp
+        """
+        # Step 1. Set the right headers and parameters for the request
+        headers = {'Accept': 'application/json'}
+        params = {
+            'pair': self.product_id,
+            'since': self.since_timestamp_ns,
+        }
+
+        # Step 2. Send GET request to Kraken API
+        try:
+            # Send a GET request to the Kraken API
+            response = requests.request('GET', self.URL, headers=headers, params=params)
+
+        except requests.exceptions.SSLError as e:
+            # If we get an error, we sleep for 10 seconds and early return the function
+            logger.error(f'The Kraken API is not reachable. Error: {e}')
+
+            # wait 10 seconds and try again
+            # It would be better to make this source stateful and recoverable, so if
+            # the container goes down and gets restarted by Kubernetes, it can resume
+            # from where it left off.
+            # TODO: reimplement this class a stateful Quix Streams data source so we don't
+            # have sleep here.
+            logger.error('Sleeping for 10 seconds and trying again...')
+            time.sleep(10)
             return []
 
-        # transform raw string into a JSON object
+        # Step 3. Parse the output as a dictionary
         try:
-            data = json.loads(data)
+            data = json.loads(response.text)
         except json.JSONDecodeError as e:
-            logger.error(f'Error decoding JSON: {e}')
+            logger.error(f'Failed to parse response as json: {e}')
             return []
 
         try:
-            trades_data = data['data']
+            # Get the trades data
+            trades = data['result'][self.product_id]
         except KeyError as e:
-            logger.error(f'No `data` field with trades in the message {e}')
+            logger.error(f'Failed to get trades for pair {self.product_id}: {e}')
             return []
 
-        # Method 1 to create a list of trades
-        # Naive implementation
-        # trades = []
-        # for trade in trades_data:
-        #     trades.append(
-        #         Trade(
-        #             product_id=trade['symbol'],
-        #             price=trade['price'],
-        #             quantity=trade['qty'],
-        #             timestamp=trade['timestamp'],
-        #         )
-        #     )
-
-        # Method 2 to create a list of trades
-        # Using list comprehension (this is faster)
+        # Step 4. Transform the trades data into a list of Trade objects
         trades = [
-            Trade(
-                product_id=trade['symbol'],
-                price=trade['price'],
-                quantity=trade['qty'],
-                timestamp=trade['timestamp'],
+            Trade.from_kraken_rest_api_response(
+                product_id=self.product_id,
+                price=trade[0],
+                quantity=trade[1],
+                timestamp_sec=trade[2],
             )
-            for trade in trades_data
+            for trade in trades
         ]
+
+        # update the since_timestamp_ns
+        self.since_timestamp_ns = int(float(data['result']['last']))
+
+        # check stopping condition
+        if self.since_timestamp_ns > int(time.time_ns() - 1000000000):
+            # we got trades until now, so we can stop
+            self._is_done = True
+
+        # breakpoint()
 
         return trades
 
-    def _subscribe(self, product_ids: list[str]):
-        """
-        Subscribes to the websocket for the given `product_ids`
-        and waits for the initial snapshot.
-        """
-        # send a subscribe message to the websocket
-        self._ws_client.send(
-            json.dumps(
-                {
-                    'method': 'subscribe',
-                    'params': {
-                        'channel': 'trade',
-                        'symbol': product_ids,
-                        'snapshot': False,
-                    },
-                }
-            )
-        )
-        # discard the first 2 messages for each product_id
-        # as they contain no trade data
-        for _ in product_ids:
-            _ = self._ws_client.recv()
-            _ = self._ws_client.recv()
+    def is_done(self) -> bool:
+        return self._is_done
+
+
+class KrakenRestMultiAPI:
+    """Fetch historical trades for multiple Kraken products."""
+
+    def __init__(self, product_ids: list[str], last_n_days: int):
+        self._clients = [
+            KrakenRestAPI(product_id=product_id, last_n_days=last_n_days)
+            for product_id in product_ids
+        ]
+
+    def get_trades(self) -> list[Trade]:
+        all_trades: list[Trade] = []
+
+        for client in self._clients:
+            if client.is_done():
+                continue
+            all_trades.extend(client.get_trades())
+
+        # Keep cross-product output deterministic and roughly chronological.
+        all_trades.sort(key=lambda trade: trade.timestamp_ms)
+        return all_trades
+
+    def is_done(self) -> bool:
+        if not self._clients:
+            return True
+        return all(client.is_done() for client in self._clients)
