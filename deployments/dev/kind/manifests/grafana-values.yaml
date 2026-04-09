@@ -88,5 +88,8 @@ ingress:
 persistence:
   enabled: true
 
+initChownData:
+  enabled: false
+
 testFramework:
   enabled: false
