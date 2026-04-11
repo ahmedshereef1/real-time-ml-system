@@ -18,13 +18,13 @@
     "editable": true,
     "fiscalYearStartMonth": 0,
     "graphTooltip": 0,
-    "id": 0,
+    "id": 2,
     "links": [],
     "panels": [
       {
         "datasource": {
           "type": "grafana-postgresql-datasource",
-          "uid": "cfi37nq8vyy2od"
+          "uid": "eejvb1huklcsgc"
         },
         "fieldConfig": {
           "defaults": {
@@ -55,7 +55,6 @@
                 "type": "linear"
               },
               "showPoints": "auto",
-              "showValues": false,
               "spanNulls": false,
               "stacking": {
                 "group": "A",
@@ -70,8 +69,7 @@
               "mode": "absolute",
               "steps": [
                 {
-                  "color": "green",
-                  "value": 0
+                  "color": "green"
                 },
                 {
                   "color": "red",
@@ -83,8 +81,8 @@
           "overrides": []
         },
         "gridPos": {
-          "h": 8,
-          "w": 12,
+          "h": 7,
+          "w": 20,
           "x": 0,
           "y": 0
         },
@@ -110,18 +108,17 @@
             "sort": "none"
           }
         },
-        "pluginVersion": "12.3.1",
+        "pluginVersion": "11.6.1",
         "targets": [
           {
-            "dataset": "dev",
             "datasource": {
               "type": "grafana-postgresql-datasource",
-              "uid": "cfi37nq8vyy2od"
+              "uid": "eejvb1huklcsgc"
             },
             "editorMode": "code",
             "format": "table",
             "rawQuery": true,
-            "rawSql": "SELECT open, high, low, close, pair, window_start_ms, window_end_ms, \r\n       to_timestamp(window_start_ms / 1000) AS time\r\nFROM public.technical_indicators\r\nWhere pair = 'ETH/EUR'\r\n\r\n\r\n",
+            "rawSql": "select\n  open, high, low, close, pair, window_start_ms, window_end_ms, to_timestamp(window_start_ms / 1000) as time\nfrom public.technical_indicators\nwhere pair = 'ETH/EUR'",
             "refId": "A",
             "sql": {
               "columns": [
@@ -148,7 +145,7 @@
       {
         "datasource": {
           "type": "grafana-postgresql-datasource",
-          "uid": "cfi37nq8vyy2od"
+          "uid": "eejvb1huklcsgc"
         },
         "fieldConfig": {
           "defaults": {
@@ -179,7 +176,6 @@
                 "type": "linear"
               },
               "showPoints": "auto",
-              "showValues": false,
               "spanNulls": false,
               "stacking": {
                 "group": "A",
@@ -194,8 +190,7 @@
               "mode": "absolute",
               "steps": [
                 {
-                  "color": "green",
-                  "value": 0
+                  "color": "green"
                 },
                 {
                   "color": "red",
@@ -207,10 +202,10 @@
           "overrides": []
         },
         "gridPos": {
-          "h": 8,
-          "w": 12,
+          "h": 7,
+          "w": 20,
           "x": 0,
-          "y": 8
+          "y": 7
         },
         "id": 2,
         "options": {
@@ -234,18 +229,17 @@
             "sort": "none"
           }
         },
-        "pluginVersion": "12.3.1",
+        "pluginVersion": "11.6.1",
         "targets": [
           {
-            "dataset": "dev",
             "datasource": {
               "type": "grafana-postgresql-datasource",
-              "uid": "cfi37nq8vyy2od"
+              "uid": "eejvb1huklcsgc"
             },
             "editorMode": "code",
             "format": "table",
             "rawQuery": true,
-            "rawSql": "SELECT open, high, low, close, pair, window_start_ms, window_end_ms, \r\n       to_timestamp(window_start_ms / 1000) AS time\r\nFROM public.technical_indicators\r\nWhere pair = 'BTC/EUR'\r\n\r\n\r\n",
+            "rawSql": "select\n  open, high, low, close, pair, window_start_ms, window_end_ms, to_timestamp(window_start_ms / 1000) as time\nfrom public.technical_indicators\nwhere pair = 'BTC/EUR'",
             "refId": "A",
             "sql": {
               "columns": [
@@ -272,7 +266,7 @@
     ],
     "preload": false,
     "refresh": "auto",
-    "schemaVersion": 42,
+    "schemaVersion": 41,
     "tags": [],
     "templating": {
       "list": []
@@ -284,6 +278,6 @@
     "timepicker": {},
     "timezone": "browser",
     "title": "technical_indicators",
-    "uid": "adxnzgw",
-    "version": 5
-  }
+    "uid": "aejvczx1xmmf4f",
+    "version": 8
+}
