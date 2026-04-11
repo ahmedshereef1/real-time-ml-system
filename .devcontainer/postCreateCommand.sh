@@ -9,5 +9,7 @@ if [ -f "mise.toml" ]; then
   mise install
 fi
 
-echo 'eval "$(/usr/local/bin/mise activate bash)"' >> ~/.bashrc
+if ! grep -Fq 'eval "$(/usr/local/bin/mise activate bash)"' ~/.bashrc; then
+  echo 'eval "$(/usr/local/bin/mise activate bash)"' >> ~/.bashrc
+fi
 source ~/.bashrc
