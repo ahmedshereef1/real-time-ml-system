@@ -3,6 +3,7 @@ from loguru import logger
 from quixstreams import Application
 
 from trades.config import config
+from trades.kraken_ohlc_api import KrakenOHLCMultiAPI
 from trades.kraken_rest_api import KrakenRestAPI, KrakenRestMultiAPI
 from trades.kraken_websocket_api import krakenWebsocketAPI
 from trades.trade import Trade
@@ -11,7 +12,10 @@ from trades.trade import Trade
 def run(
     kafka_broker_address: str,
     kafka_topic_name: str,
-    kraken_api: krakenWebsocketAPI | KrakenRestAPI | KrakenRestMultiAPI,
+    kraken_api: krakenWebsocketAPI
+    | KrakenRestAPI
+    | KrakenRestMultiAPI
+    | KrakenOHLCMultiAPI,
 ):
     app = Application(broker_address=kafka_broker_address)
 
@@ -43,11 +47,22 @@ if __name__ == '__main__':
         api = krakenWebsocketAPI(product_ids=config.product_ids)
 
     elif config.live_or_historical == 'historical':
-        logger.info('Using historical data from Kraken API for all configured products')
-        api = KrakenRestMultiAPI(
-            product_ids=config.product_ids,
-            last_n_days=config.last_n_days,
-        )
+        if config.historical_source == 'ohlc':
+            logger.info(
+                'Using historical OHLC data from Kraken API for all configured products'
+            )
+            api = KrakenOHLCMultiAPI(
+                product_ids=config.product_ids,
+                last_n_days=config.last_n_days,
+            )
+        else:
+            logger.info(
+                'Using historical trades data from Kraken API for all configured products'
+            )
+            api = KrakenRestMultiAPI(
+                product_ids=config.product_ids,
+                last_n_days=config.last_n_days,
+            )
     else:
         raise ValueError(
             'Invalid value for live_or_historical. Must be "live" or "historical".'

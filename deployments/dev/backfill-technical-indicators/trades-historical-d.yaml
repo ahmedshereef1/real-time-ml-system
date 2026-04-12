@@ -55,6 +55,8 @@ spec:
               key: TRADES_TOPIC
         - name: LIVE_OR_HISTORICAL
           value: "historical"
+        - name: HISTORICAL_SOURCE
+          value: "ohlc"
         - name: LAST_N_DAYS
           valueFrom:
             configMapKeyRef:

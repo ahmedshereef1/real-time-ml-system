@@ -30,6 +30,7 @@ class Settings(BaseSettings):
         )
     )
     live_or_historical: Literal['live', 'historical'] = 'live'
+    historical_source: Literal['trades', 'ohlc'] = 'ohlc'
     last_n_days: int = 30
 
 
