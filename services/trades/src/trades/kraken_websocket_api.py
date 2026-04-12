@@ -5,27 +5,21 @@ from websocket import create_connection
 
 from trades.trade import Trade
 
-# class Trade(BaseModel):
-#     product_id: str
-#     price: float
-#     quantity: float
-#     timestamp: str
 
-#     def to_dict(self) -> dict:
-#         return self.model_dump()
-
-
-class krakenWebsocketAPI:
+class KrakenWebsocketAPI:
     URL = 'wss://ws.kraken.com/v2'
 
-    def __init__(self, product_ids: list[str]):
+    def __init__(
+        self,
+        product_ids: list[str],
+    ):
         self.product_ids = product_ids
 
-        # Create a websoket client
+        # create a websocket client
         self._ws_client = create_connection(self.URL)
 
-        #
-        self._subscribe(self.product_ids)
+        # send initial subscribe message
+        self._subscribe(product_ids)
 
     def get_trades(self) -> list[Trade]:
         data: str = self._ws_client.recv()
@@ -92,6 +86,7 @@ class krakenWebsocketAPI:
                 }
             )
         )
+
         # discard the first 2 messages for each product_id
         # as they contain no trade data
         for _ in product_ids:

@@ -96,7 +96,7 @@ class KrakenRestAPI:
 
 
 class KrakenRestMultiAPI:
-    """Fetch historical trades for multiple Kraken products."""
+    """Fetch historical trades for multiple Kraken products in chronological order."""
 
     def __init__(self, product_ids: list[str], last_n_days: int):
         self._clients = [
@@ -112,7 +112,7 @@ class KrakenRestMultiAPI:
                 continue
             all_trades.extend(client.get_trades())
 
-        # Keep cross-product output deterministic and roughly chronological.
+        # Preserve increasing event-time across products to avoid late-window drops.
         all_trades.sort(key=lambda trade: trade.timestamp_ms)
         return all_trades
 
