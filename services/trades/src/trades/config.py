@@ -29,9 +29,20 @@ class Settings(BaseSettings):
             'kafka_topic_name',
         )
     )
-    live_or_historical: Literal['live', 'historical'] = 'live'
-    historical_source: Literal['trades', 'ohlc'] = 'ohlc'
-    last_n_days: int = 30
+    live_or_historical: Literal['live', 'historical'] = Field(
+        default='live',
+        validation_alias=AliasChoices(
+            'LIVE_OR_HISTORICAL',
+            'live_or_historical',
+        ),
+    )
+    last_n_days: int = Field(
+        default=30,
+        validation_alias=AliasChoices(
+            'LAST_N_DAYS',
+            'last_n_days',
+        ),
+    )
 
 
 config = Settings()
