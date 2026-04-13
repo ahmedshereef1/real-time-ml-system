@@ -10,7 +10,6 @@ dependencies = [
     "pydantic>=2.12.5",
     "quixstreams>=3.23.4",
     "requests>=2.32.3",
-    "risingwave-py",
     "ta-lib>=0.6.8",
     "technical-indicators",
     "trades",
@@ -27,6 +26,7 @@ members = [
     "services/trades",
     "services/candles",
     "services/technical_indicators",
+    "services/predictor",
 ]
 
 [tool.uv.sources]

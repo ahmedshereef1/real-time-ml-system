@@ -1,0 +1,18 @@
+[project]
+name = "predictor"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Ahmed Sherif", email = "as4349124@gmail.com" }
+]
+requires-python = ">=3.11"
+dependencies = [
+    "great-expectations>=1.16.0",
+    "psycopg2-binary>=2.9.11",
+    "risingwave-py>=0.0.2",
+]
+
+[build-system]
+requires = ["uv_build>=0.11.3,<0.12.0"]
+build-backend = "uv_build"
