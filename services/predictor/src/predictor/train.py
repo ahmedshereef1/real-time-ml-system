@@ -140,6 +140,7 @@ def train(
     training_data_horizon_days: int,
     candle_seconds: int,
     prediction_horizon_seconds: int,
+    train_test_split_ratio: float,
     n_rows_for_data_profiling: int,
     eda_report_html_path: str,
 ):
@@ -186,6 +187,9 @@ def train(
             -prediction_horizon_seconds // candle_seconds
         )
 
+        # drop rows for which the target in NaN
+        ts_data = ts_data.dropna(subset=['target'])
+
         # log the data to MLflow
         dataset = mlflow.data.from_pandas(ts_data)
         mlflow.log_input(dataset, context='training')
@@ -209,6 +213,35 @@ def train(
         logger.info('Publishing EDA report to MLflow')
         mlflow.log_artifact(local_path=eda_report_html_path, artifact_path='eda_report')
 
+        # Step 5: Split into train/test
+        train_size = int(len(ts_data) * train_test_split_ratio)
+        train_data = ts_data[:train_size]
+        test_data = ts_data[train_size:]
+        mlflow.log_param('train_data_shape', train_data.shape)
+        mlflow.log_param('test_data_shape', test_data.shape)
+
+        # Step 6: Split data into features and target
+        X_train = train_data.drop(columns=['target'])
+        y_train = train_data['target']
+        X_test = test_data.drop(columns=['target'])
+        y_test = test_data['target']
+        mlflow.log_param('X_train_shape', X_train.shape)
+        mlflow.log_param('y_train_shape', y_train.shape)
+        mlflow.log_param('X_test_shape', X_test.shape)
+        mlflow.log_param('y_test_shape', y_test.shape)
+
+        # Step 7: build a dummy baseline model
+        from predictor.models import BaselineModel
+
+        model = BaselineModel()
+        y_pred = model.predict(X_test)
+        from sklearn.metrics import mean_absolute_error
+
+        test_mae_baseline = mean_absolute_error(y_test, y_pred)
+
+        mlflow.log_metric('test_mae_baseline', test_mae_baseline)
+        logger.info(f'Baseline model test MAE: {test_mae_baseline}')
+
 
 if __name__ == '__main__':
     train(
@@ -223,6 +256,7 @@ if __name__ == '__main__':
         training_data_horizon_days=10,
         candle_seconds=60,
         prediction_horizon_seconds=300,
+        train_test_split_ratio=0.8,
         n_rows_for_data_profiling=200,
         eda_report_html_path='./eda_report.html',
     )

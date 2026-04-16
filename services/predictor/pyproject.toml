@@ -13,6 +13,7 @@ dependencies = [
     "mlflow>=3.11.1",
     "psycopg2-binary>=2.9.11",
     "risingwave-py>=0.0.2",
+    "scikit-learn>=1.8.0",
     "setuptools>=68,<81",
     "ydata-profiling>=4.18.1",
 ]
