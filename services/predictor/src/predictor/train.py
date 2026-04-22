@@ -203,6 +203,9 @@ def train(
         # drop rows for which the target in NaN
         ts_data = ts_data.dropna(subset=['target'])
 
+        # TAKE ONLY 1/4 OF DATA (FAST DEV MODE)
+        ts_data = ts_data.iloc[: len(ts_data) // 4]
+
         # log the data to MLflow
         dataset = mlflow.data.from_pandas(ts_data)
         mlflow.log_input(dataset, context='training')
