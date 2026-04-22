@@ -143,6 +143,7 @@ def train(
     train_test_split_ratio: float,
     n_rows_for_data_profiling: int,
     eda_report_html_path: str,
+    features: list[str],
 ):
     """
     Trains a predictor for the given pair and data, and if the model is good, it pushes
@@ -169,6 +170,15 @@ def train(
     with mlflow.start_run():
         logger.info('Starting MLflow run')
 
+        # Input to the Training process
+        mlflow.log_param('features', features)
+        mlflow.log_param('pair', pair)
+        mlflow.log_param('candle_seconds', candle_seconds)
+        mlflow.log_param('prediction_horizon_seconds', prediction_horizon_seconds)
+        mlflow.log_param('data_horizon_days', training_data_horizon_days)
+        mlflow.log_param('train_test_split_ratio', train_test_split_ratio)
+        mlflow.log_param('n_rows_for_data_profiling', n_rows_for_data_profiling)
+
         # Step 1:  Load technical indicators data from RisingWave
         ts_data = load_ts_data_from_risingwave(
             host=risingwave_host,
@@ -181,6 +191,9 @@ def train(
             training_data_horizon_days=training_data_horizon_days,
             candle_seconds=candle_seconds,
         )
+
+        # Keep only the features we need and the target column
+        ts_data = ts_data[features]
 
         # Step 2: Add target column
         ts_data['target'] = ts_data['close'].shift(
@@ -242,6 +255,24 @@ def train(
         mlflow.log_metric('test_mae_baseline', test_mae_baseline)
         logger.info(f'Baseline model test MAE: {test_mae_baseline}')
 
+        # Step 8: Train a set of N models to get a sense what model works well of the problem
+        # We use lazepredict which use default hyperparameters for each model
+        from predictor.models import generate_lazy_predict_model_table
+
+        models_scores: pd.DataFrame = generate_lazy_predict_model_table(
+            X_train, y_train, X_test, y_test
+        )
+
+        # reset index to have the model names in a column instead of index, so that we can log it as a table to MLflow
+        models_scores.reset_index(inplace=True)
+
+        mlflow.log_table(
+            models_scores, 'models_scores_with_default_hyperparameters.parquet'
+        )
+        logger.info(models_scores.to_string())
+
+        # Step 9: Pick the best model from models_scores and train with the best hyperparameters
+
 
 if __name__ == '__main__':
     train(
@@ -257,6 +288,30 @@ if __name__ == '__main__':
         candle_seconds=60,
         prediction_horizon_seconds=300,
         train_test_split_ratio=0.8,
-        n_rows_for_data_profiling=200,
+        n_rows_for_data_profiling=1,  # TODO: set to 1 to speed up development
         eda_report_html_path='./eda_report.html',
+        features=[
+            'open',
+            'high',
+            'low',
+            'close',
+            'window_start_ms',
+            'volume',
+            'sma_7',
+            'sma_14',
+            'sma_21',
+            'sma_60',
+            'ema_7',
+            'ema_14',
+            'ema_21',
+            'ema_60',
+            'rsi_7',
+            'rsi_14',
+            'rsi_21',
+            'rsi_60',
+            'macd_7',
+            'macdsignal_7',
+            'macdhist_7',
+            'obv',
+        ],
     )

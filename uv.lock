@@ -1927,6 +1927,23 @@ wheels = [
 ]
 
 [[package]]
+name = "lazypredict"
+version = "0.3.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "click" },
+    { name = "joblib" },
+    { name = "numpy" },
+    { name = "pandas" },
+    { name = "scikit-learn" },
+    { name = "tqdm" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/d2/9f/af6b02ccd845869bb01aefd962035932370e90305b978503ae5a8a2a6611/lazypredict-0.3.0.tar.gz", hash = "sha256:41466cb337d59563296ca56b262c8037add022283c79c4ebb6ce7a449b979880", size = 98434, upload-time = "2026-03-15T18:00:38.014Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/07/90/f170254565c2a6588248f08aade71aadbbceaa6f24cdea1604ffc4a947d8/lazypredict-0.3.0-py3-none-any.whl", hash = "sha256:b408d5a770ad28c0816e34c336dca5dc4dc614318ddd451a6b8829fc8e8fdf35", size = 71008, upload-time = "2026-03-15T18:00:36.445Z" },
+]
+
+[[package]]
 name = "llvmlite"
 version = "0.45.1"
 source = { registry = "https://pypi.org/simple" }
@@ -2941,6 +2958,7 @@ version = "0.1.0"
 source = { editable = "services/predictor" }
 dependencies = [
     { name = "great-expectations" },
+    { name = "lazypredict" },
     { name = "loguru" },
     { name = "mlflow" },
     { name = "psycopg2-binary" },
@@ -2953,6 +2971,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "great-expectations", specifier = ">=0.18.8,<1.0.0" },
+    { name = "lazypredict", specifier = ">=0.3.0" },
     { name = "loguru", specifier = ">=0.7.3" },
     { name = "mlflow", specifier = ">=3.11.1" },
     { name = "psycopg2-binary", specifier = ">=2.9.11" },

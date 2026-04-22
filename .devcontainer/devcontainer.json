@@ -34,11 +34,11 @@
 
     // 3. Use 'runArgs' to pass arguments to the container.
     // run the container with all GPUs
-    //"runArgs": [
-    //  "--gpus",
-    //  "all"
-    //],
-
+    "runArgs": [
+        "--cpus", "12",
+        "--memory", "12g",
+        "--memory-swap", "12g"
+    ],
     // 4. Features to add to the Dev Container. More info: https://containers.dev/implementors/features.
     "features": {
         // Python with uv, Ruff, Mypy, MonkeyType and Bandit, installed using pipx 
