@@ -1,3 +1,4 @@
+# TODO: use the equivalent function from model_registry.py
 def get_experiment_name(
     pair: str, candle_seconds: int, prediction_horizon_seconds: int
 ) -> str:

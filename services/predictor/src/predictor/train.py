@@ -12,11 +12,18 @@ Has the following steps:
 8. Push model
 """
 
-import great_expectations as ge
+from typing import Optional
+
 import mlflow
 import pandas as pd
 from loguru import logger
 from risingwave import OutputFormat, RisingWave, RisingWaveConnOptions
+from sklearn.metrics import mean_absolute_error
+from ydata_profiling import ProfileReport
+
+from predictor.data_validation import validate_data
+from predictor.model_registry import get_model_name, push_model
+from predictor.models import BaselineModel, get_model_candidates, get_model_obj
 
 
 def generate_exploratory_data_analysis_report(
@@ -28,48 +35,14 @@ def generate_exploratory_data_analysis_report(
     saves it locally to the given `output_html_path`
 
     Args:
-        ts_data:
-        output_html_file:
+        ts_data: The DataFrame containing the technical indicators data.
+        output_html_file: The path to save the HTML report.
     """
-    from ydata_profiling import ProfileReport
 
     profile = ProfileReport(
         ts_data, tsmode=True, sortby='window_start_ms', title='Technical indicators EDA'
     )
     profile.to_file(output_html_path)
-
-
-def validate_data(ts_data: pd.DataFrame) -> pd.DataFrame:
-    """
-    If the percentage of rows with missing values is greater than `max_percentage_rows_with_missing_values`,
-    raise an exception so that the training process can be aborted.
-
-    If that tests passes, check for the following things:
-
-    - Column "close" has values more than 0
-    # - Column "volume" has values more than 0
-    # - Column "window_start_ms" is sorted
-
-    """
-    ge_df = ge.from_pandas(ts_data)
-
-    validation_result = ge_df.expect_column_values_to_be_between(
-        column='close',
-        min_value=0,
-        strict_min=True,
-    )
-
-    if not validation_result.success:
-        raise Exception('Column "close" has values less than 0')
-
-    # TODO: Add more validation checks
-    # For example:
-    # - Check for null values
-    # - Check for duplicates
-    # - Check the data is sorted by timestamp
-    # - ...
-
-    return ts_data
 
 
 def load_ts_data_from_risingwave(
@@ -141,9 +114,14 @@ def train(
     candle_seconds: int,
     prediction_horizon_seconds: int,
     train_test_split_ratio: float,
+    max_percentage_rows_with_missing_values: float,
     n_rows_for_data_profiling: int,
     eda_report_html_path: str,
     features: list[str],
+    hyperparam_search_trials: int,
+    model_name: Optional[str] = None,
+    n_model_candidates: Optional[int] = 1,
+    max_percentage_diff_mae_wrt_baseline: Optional[float] = 0.10,
 ):
     """
     Trains a predictor for the given pair and data, and if the model is good, it pushes
@@ -178,6 +156,11 @@ def train(
         mlflow.log_param('data_horizon_days', training_data_horizon_days)
         mlflow.log_param('train_test_split_ratio', train_test_split_ratio)
         mlflow.log_param('n_rows_for_data_profiling', n_rows_for_data_profiling)
+        mlflow.log_param(
+            'max_percentage_diff_mae_wrt_baseline', max_percentage_diff_mae_wrt_baseline
+        )
+        if model_name:
+            mlflow.log_param('model_name', model_name)
 
         # Step 1:  Load technical indicators data from RisingWave
         ts_data = load_ts_data_from_risingwave(
@@ -200,11 +183,8 @@ def train(
             -prediction_horizon_seconds // candle_seconds
         )
 
-        # drop rows for which the target in NaN
-        ts_data = ts_data.dropna(subset=['target'])
-
-        # TAKE ONLY 1/4 OF DATA (FAST DEV MODE)
-        ts_data = ts_data.iloc[: len(ts_data) // 4]
+        # TAKE ONLY 1/2 OF DATA (FAST DEV MODE)
+        ts_data = ts_data.iloc[: len(ts_data) // 2]
 
         # log the data to MLflow
         dataset = mlflow.data.from_pandas(ts_data)
@@ -214,7 +194,7 @@ def train(
         mlflow.log_param('ts_data_shape', ts_data.shape)
 
         # Step 3: validate the data
-        validate_data(ts_data)
+        ts_data = validate_data(ts_data, max_percentage_rows_with_missing_values)
 
         # Step 4: Profile the data
         ts_data_for_profile = (
@@ -246,35 +226,51 @@ def train(
         mlflow.log_param('X_test_shape', X_test.shape)
         mlflow.log_param('y_test_shape', y_test.shape)
 
-        # Step 7: build a dummy baseline model
-        from predictor.models import BaselineModel
-
-        model = BaselineModel()
-        y_pred = model.predict(X_test)
-        from sklearn.metrics import mean_absolute_error
-
+        # Step 7: Build a dummy baseline model
+        baseline_model = BaselineModel()
+        y_pred = baseline_model.predict(X_test)
         test_mae_baseline = mean_absolute_error(y_test, y_pred)
-
         mlflow.log_metric('test_mae_baseline', test_mae_baseline)
-        logger.info(f'Baseline model test MAE: {test_mae_baseline}')
+        logger.info(f'Baseline model test MAE: {test_mae_baseline:.4f}')
 
-        # Step 8: Train a set of N models to get a sense what model works well of the problem
-        # We use lazepredict which use default hyperparameters for each model
-        from predictor.models import generate_lazy_predict_model_table
+        # Step 8: Find the best candidate model, if `model_name` is not provided.
+        if model_name is None:
+            # We fit N models with default hyperparameters for the given
+            # (X_train, y_train), and evaluate them with (X_test, y_test)
+            # to find the best `n_model_candidates` models
+            model_names = get_model_candidates(
+                X_train, y_train, X_test, y_test, n_candidates=n_model_candidates
+            )
+            mlflow.log_param('model_candidates', model_names)
+            model_name = model_names[0]
 
-        models_scores: pd.DataFrame = generate_lazy_predict_model_table(
-            X_train, y_train, X_test, y_test
-        )
+        model = get_model_obj(model_name)
 
-        # reset index to have the model names in a column instead of index, so that we can log it as a table to MLflow
-        models_scores.reset_index(inplace=True)
+        # Step 9: Train the choosen model with hyperparameter search.
+        logger.info(f'Start training model: {model} with hyperparameter search')
+        model.fit(X_train, y_train, hyperparam_search_trials=hyperparam_search_trials)
 
-        mlflow.log_table(
-            models_scores, 'models_scores_with_default_hyperparameters.parquet'
-        )
-        logger.info(models_scores.to_string())
+        # Step 10: Validate the model
+        y_pred = model.predict(X_test)
+        test_mae = mean_absolute_error(y_test, y_pred)
+        mlflow.log_metric('test_mae', test_mae)
+        logger.info(f'Test MAE for model {model}: {test_mae:.4f}')
 
-        # Step 9: Pick the best model from models_scores and train with the best hyperparameters
+        # Step 11: Push the model to the model registry
+        if (
+            test_mae - test_mae_baseline
+        ) / test_mae_baseline <= max_percentage_diff_mae_wrt_baseline:
+            logger.info(
+                f'Model MAE is within {max_percentage_diff_mae_wrt_baseline} perc difference.'
+            )
+            logger.info('Pushing model to the model registry')
+            model_name = get_model_name(
+                pair, candle_seconds, prediction_horizon_seconds
+            )
+            push_model(model, X_test, model_name)
+        else:
+            logger.info(f'The model {model_name} has an MAE too far from the baseline')
+            logger.info('Model NOT PUSHED to the model registry')
 
 
 if __name__ == '__main__':
@@ -291,6 +287,7 @@ if __name__ == '__main__':
         candle_seconds=60,
         prediction_horizon_seconds=300,
         train_test_split_ratio=0.8,
+        max_percentage_rows_with_missing_values=0.01,  # data quality check
         n_rows_for_data_profiling=1,  # TODO: set to 1 to speed up development
         eda_report_html_path='./eda_report.html',
         features=[
@@ -317,4 +314,12 @@ if __name__ == '__main__':
             'macdhist_7',
             'obv',
         ],
+        hyperparam_search_trials=10,
+        model_name='HuberRegressor',
+        n_model_candidates=1,
+        # only push the model if it improves the MAE by at least 10% compared to the baseline model
+        # In a real scenario you can reduce this parameter further
+        max_percentage_diff_mae_wrt_baseline=0.10,
     )
+
+# direnv exec . uv run src/predictor/train.py

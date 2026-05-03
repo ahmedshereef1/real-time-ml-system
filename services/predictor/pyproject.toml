@@ -12,6 +12,7 @@ dependencies = [
     "lazypredict>=0.3.0",
     "loguru>=0.7.3",
     "mlflow>=3.11.1",
+    "optuna>=4.8.0",
     "psycopg2-binary>=2.9.11",
     "risingwave-py>=0.0.2",
     "scikit-learn>=1.8.0",
