@@ -115,7 +115,7 @@ def train(
     prediction_horizon_seconds: int,
     train_test_split_ratio: float,
     max_percentage_rows_with_missing_values: float,
-    n_rows_for_data_profiling: int,
+    data_profiling_n_rows: int,
     eda_report_html_path: str,
     features: list[str],
     hyperparam_search_trials: int,
@@ -155,7 +155,7 @@ def train(
         mlflow.log_param('prediction_horizon_seconds', prediction_horizon_seconds)
         mlflow.log_param('data_horizon_days', training_data_horizon_days)
         mlflow.log_param('train_test_split_ratio', train_test_split_ratio)
-        mlflow.log_param('n_rows_for_data_profiling', n_rows_for_data_profiling)
+        mlflow.log_param('data_profiling_n_rows', data_profiling_n_rows)
         mlflow.log_param(
             'max_percentage_diff_mae_wrt_baseline', max_percentage_diff_mae_wrt_baseline
         )
@@ -198,9 +198,7 @@ def train(
 
         # Step 4: Profile the data
         ts_data_for_profile = (
-            ts_data.head(n_rows_for_data_profiling)
-            if n_rows_for_data_profiling
-            else ts_data
+            ts_data.head(data_profiling_n_rows) if data_profiling_n_rows else ts_data
         )
         generate_exploratory_data_analysis_report(
             ts_data_for_profile, output_html_path=eda_report_html_path
@@ -274,52 +272,31 @@ def train(
 
 
 if __name__ == '__main__':
+    from predictor.config import training_config as config
+
     train(
-        mlflow_tracking_uri='http://127.0.0.1:8283',
-        risingwave_host='localhost',
-        risingwave_port=4567,
-        risingwave_user='root',
-        risingwave_password='',
-        risingwave_database='dev',
-        risingwave_table='technical_indicators',
-        pair='BTC/USD',
-        training_data_horizon_days=10,
-        candle_seconds=60,
-        prediction_horizon_seconds=300,
-        train_test_split_ratio=0.8,
-        max_percentage_rows_with_missing_values=0.01,  # data quality check
-        n_rows_for_data_profiling=1,  # TODO: set to 1 to speed up development
-        eda_report_html_path='./eda_report.html',
-        features=[
-            'open',
-            'high',
-            'low',
-            'close',
-            'window_start_ms',
-            'volume',
-            'sma_7',
-            'sma_14',
-            'sma_21',
-            'sma_60',
-            'ema_7',
-            'ema_14',
-            'ema_21',
-            'ema_60',
-            'rsi_7',
-            'rsi_14',
-            'rsi_21',
-            'rsi_60',
-            'macd_7',
-            'macdsignal_7',
-            'macdhist_7',
-            'obv',
-        ],
-        hyperparam_search_trials=10,
-        model_name='HuberRegressor',
-        n_model_candidates=1,
+        mlflow_tracking_uri=config.mlflow_tracking_uri,
+        risingwave_host=config.risingwave_host,
+        risingwave_port=config.risingwave_port,
+        risingwave_user=config.risingwave_user,
+        risingwave_password=config.risingwave_password,
+        risingwave_database=config.risingwave_database,
+        risingwave_table=config.risingwave_table,
+        pair=config.pair,
+        training_data_horizon_days=config.training_data_horizon_days,
+        candle_seconds=config.candle_seconds,
+        prediction_horizon_seconds=config.prediction_horizon_seconds,
+        train_test_split_ratio=config.train_test_split_ratio,
+        max_percentage_rows_with_missing_values=config.max_percentage_rows_with_missing_values,
+        data_profiling_n_rows=config.data_profiling_n_rows,
+        eda_report_html_path=config.eda_report_html_path,
+        features=config.features,
+        hyperparam_search_trials=config.hyperparam_search_trials,
+        model_name=config.model_name,
+        n_model_candidates=config.n_model_candidates,
         # only push the model if it improves the MAE by at least 10% compared to the baseline model
         # In a real scenario you can reduce this parameter further
-        max_percentage_diff_mae_wrt_baseline=0.10,
+        max_percentage_diff_mae_wrt_baseline=config.max_percentage_diff_mae_wrt_baseline,
     )
 
 # direnv exec . uv run src/predictor/train.py
