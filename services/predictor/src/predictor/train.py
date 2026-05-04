@@ -196,6 +196,9 @@ def train(
         # Step 3: validate the data
         ts_data = validate_data(ts_data, max_percentage_rows_with_missing_values)
 
+        # TODO: PLot data drift of the current data vs the data used by the model in the model registry
+        # from predictor.data_validation import generate_data_drift_report
+
         # Step 4: Profile the data
         ts_data_for_profile = (
             ts_data.head(data_profiling_n_rows) if data_profiling_n_rows else ts_data
