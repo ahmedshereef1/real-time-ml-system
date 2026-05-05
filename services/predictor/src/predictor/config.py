@@ -12,12 +12,12 @@ class TrainingConfig(BaseSettings):
     risingwave_database: str = 'dev'
     risingwave_table: str = 'public.technical_indicators'
     pair: str = 'BTC/USD'
-    training_data_horizon_days: int = 10
+    training_data_horizon_days: int = 25
     candle_seconds: int = 60
     prediction_horizon_seconds: int = 300
     train_test_split_ratio: float = 0.8
     max_percentage_rows_with_missing_values: float = 0.01
-    data_profiling_n_rows: int = 1
+    data_profiling_n_rows: int = 3
     eda_report_html_path: str = './eda_report.html'
     features: list[str] = [
         'open',

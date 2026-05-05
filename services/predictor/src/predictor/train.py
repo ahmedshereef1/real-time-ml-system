@@ -184,7 +184,7 @@ def train(
         )
 
         # TAKE ONLY 1/2 OF DATA (FAST DEV MODE)
-        ts_data = ts_data.iloc[: len(ts_data) // 2]
+        # ts_data = ts_data.iloc[: len(ts_data) // 2]
 
         # log the data to MLflow
         dataset = mlflow.data.from_pandas(ts_data)
@@ -258,11 +258,10 @@ def train(
         logger.info(f'Test MAE for model {model}: {test_mae:.4f}')
 
         # Step 11: Push the model to the model registry
-        if (
-            test_mae - test_mae_baseline
-        ) / test_mae_baseline <= max_percentage_diff_mae_wrt_baseline:
+        mae_diff = (test_mae - test_mae_baseline) / test_mae_baseline
+        if mae_diff <= max_percentage_diff_mae_wrt_baseline:
             logger.info(
-                f'Model MAE is within {max_percentage_diff_mae_wrt_baseline} perc difference.'
+                f'Model MAE is {mae_diff:.4f} < {max_percentage_diff_mae_wrt_baseline}'
             )
             logger.info('Pushing model to the model registry')
             model_name = get_model_name(
