@@ -15,7 +15,10 @@ spec:
   # Once you see the cronjob is working as expected, you can change it to run as needed for your use case.
   # For crypto price prediction, where patterns between features and targets (if any) are not stable,
   # it probably makes sense to run it every hour.
-  schedule: "0 * * * *"
+  # What this means: 0 → minute 0
+  #                  */3 → every 3 hours
+  #                  * * * → every day, month, weekday
+  schedule: "0 */3 * * *"
   jobTemplate:
     spec:
       template:
