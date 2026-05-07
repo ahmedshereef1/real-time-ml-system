@@ -133,10 +133,8 @@ def train(
     mlflow.set_tracking_uri(mlflow_tracking_uri)
 
     logger.info('Setting up MLflow experiment')
-    from predictor.names import get_experiment_name
-
     mlflow.set_experiment(
-        get_experiment_name(pair, candle_seconds, prediction_horizon_seconds)
+        get_model_name(pair, candle_seconds, prediction_horizon_seconds)
     )
 
     # Things we want to log to MLflow:

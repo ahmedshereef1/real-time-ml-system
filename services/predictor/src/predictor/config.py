@@ -50,3 +50,23 @@ class TrainingConfig(BaseSettings):
 
 
 training_config = TrainingConfig()
+
+
+class PredictorConfig(BaseSettings):
+    mlflow_tracking_uri: str = 'http://127.0.0.1:8283'
+    risingwave_host: str = 'localhost'
+    risingwave_port: int = 4567
+    risingwave_user: str = 'root'
+    risingwave_password: str = ''
+    risingwave_database: str = 'dev'
+    risingwave_schema: str = 'public'
+    risingwave_input_table: str = 'technical_indicators'
+    risingwave_output_table: str = 'predictions'
+
+    pair: str = 'BTC/USD'
+    candle_seconds: int = 60
+    prediction_horizon_seconds: int = 300
+    model_version: Optional[str] = 'latest'
+
+
+predictor_config = PredictorConfig()
