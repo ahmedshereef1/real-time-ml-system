@@ -92,12 +92,46 @@ def predict(
         current_ms = int(datetime.now(timezone.utc).timestamp() * 1000)
         data = data[data['window_start_ms'] > current_ms - 1000 * candle_seconds * 2]
 
-        # Generate predictions
+        # Keep only the `features` columns in data
+        data = data[features]
 
-        # Write predictions to the `risingwave_output_table`
+        if data.empty:
+            return
+
+        # Generate predictions
+        predictions: pd.Series = model.predict(data)
+
+        # breakpoint()
+
+        # Prepare the output dataframe
+        output = pd.DataFrame()
+        output['predicted_price'] = predictions
+        output['pair'] = pair
+        output['ts_ms'] = int(datetime.now(timezone.utc).timestamp() * 1000)
+        output['model_name'] = model_name
+        output['model_version'] = model_version
+
+        # TODO: remove this hardcoded value
+        # For some misterious reason the variable `prediction_horizon_seconds` is not available
+        # in the scope of the function `prediction_handler`, while `pair` and `candle_seconds` are.
+        # prediction_horizon_seconds = 300
+        # breakpoint()
+
+        output['predicted_ts_ms'] = (
+            data['window_start_ms']
+            + (candle_seconds + prediction_horizon_seconds) * 1000
+        ).to_list()
+
+        logger.info(
+            f'Writing {len(output)} predictions to table {risingwave_output_table}'
+        )
+
+        # Write dataframe to the `risingwave_output_table`
+        rw.insert(table_name=risingwave_output_table, data=output)
 
     rw.on_change(
         subscribe_from=risingwave_input_table,
+        schema_name=risingwave_schema,
         handler=predictor_handler,
         output_format=OutputFormat.DATAFRAME,
     )

@@ -61,7 +61,7 @@ class PredictorConfig(BaseSettings):
     risingwave_database: str = 'dev'
     risingwave_schema: str = 'public'
     risingwave_input_table: str = 'technical_indicators'
-    risingwave_output_table: str = 'predictions'
+    risingwave_output_table: str = 'price_predictions'
 
     pair: str = 'BTC/USD'
     candle_seconds: int = 60
