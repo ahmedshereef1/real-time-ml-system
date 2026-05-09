@@ -5,7 +5,7 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: training-pipeline-aed2
+  name: training-pipeline-abc1
   namespace: rwml
 spec:
   # For debugginb you might want to run the job more often:

@@ -752,9 +752,11 @@ dependencies = [
     { name = "candles" },
     { name = "loguru" },
     { name = "predictor" },
+    { name = "psycopg2-binary" },
     { name = "pydantic" },
     { name = "quixstreams" },
     { name = "requests" },
+    { name = "risingwave-py" },
     { name = "ta-lib" },
     { name = "technical-indicators" },
     { name = "trades" },
@@ -771,9 +773,11 @@ requires-dist = [
     { name = "candles", editable = "services/candles" },
     { name = "loguru", specifier = ">=0.7.3" },
     { name = "predictor", editable = "services/predictor" },
+    { name = "psycopg2-binary", specifier = "==2.9.11" },
     { name = "pydantic", specifier = ">=2.12.5" },
     { name = "quixstreams", specifier = ">=3.23.4" },
     { name = "requests", specifier = ">=2.32.3" },
+    { name = "risingwave-py", git = "https://github.com/risingwavelabs/risingwave-py" },
     { name = "ta-lib", specifier = ">=0.6.8" },
     { name = "ta-lib", marker = "extra == 'talib'", specifier = ">=0.6.8" },
     { name = "technical-indicators", editable = "services/technical_indicators" },
@@ -2995,6 +2999,7 @@ dependencies = [
     { name = "mlflow" },
     { name = "optuna" },
     { name = "psycopg2-binary" },
+    { name = "pydantic-settings" },
     { name = "risingwave-py" },
     { name = "scikit-learn" },
     { name = "setuptools" },
@@ -3009,7 +3014,8 @@ requires-dist = [
     { name = "mlflow", specifier = ">=3.11.1" },
     { name = "optuna", specifier = ">=4.8.0" },
     { name = "psycopg2-binary", specifier = ">=2.9.11" },
-    { name = "risingwave-py", specifier = ">=0.0.2" },
+    { name = "pydantic-settings", specifier = ">=2.11.0" },
+    { name = "risingwave-py", git = "https://github.com/risingwavelabs/risingwave-py" },
     { name = "scikit-learn", specifier = ">=1.8.0" },
     { name = "setuptools", specifier = ">=68,<81" },
     { name = "ydata-profiling", specifier = ">=4.18.1" },
@@ -3871,15 +3877,11 @@ wheels = [
 [[package]]
 name = "risingwave-py"
 version = "0.0.2"
-source = { registry = "https://pypi.org/simple" }
+source = { git = "https://github.com/risingwavelabs/risingwave-py#ee4d7497fa4b66ce27fa60e8f21807fb6236064a" }
 dependencies = [
     { name = "pandas" },
     { name = "semver" },
     { name = "sqlalchemy-risingwave" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/db/e5/508c5daa9eb6c7ee2dd04093a7aaa76b3c28b21a77fadac307cc6bb97e0c/risingwave_py-0.0.2.tar.gz", hash = "sha256:4a305cc78b84833a97cce2ef9a77f17eb9ed69fcadbf855ba6cc3c405a644746", size = 46365, upload-time = "2025-06-10T09:56:25.786Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/93/93/ab3f168e40aac7d68260bdb4acee8b93882fb7b3054181c53562bfb0287a/risingwave_py-0.0.2-py3-none-any.whl", hash = "sha256:7cb39e68ec3d9fd88ed5b328cf5529e6aa41d7d2170c112dac76377eca2adf54", size = 12812, upload-time = "2025-06-10T09:56:24.534Z" },
 ]
 
 [[package]]
