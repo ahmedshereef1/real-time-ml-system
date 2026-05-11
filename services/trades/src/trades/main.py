@@ -1,6 +1,8 @@
 # Create an Application instance with Kafka configs
 from typing import Optional
 
+# Ensure referencing.jsonschema is available for confluent_kafka.
+import referencing.jsonschema  # noqa: F401
 from loguru import logger
 from quixstreams import Application
 

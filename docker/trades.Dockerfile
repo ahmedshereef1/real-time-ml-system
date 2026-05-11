@@ -4,6 +4,9 @@ FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 # Install the project into '/app'
 WORKDIR /app
 
+# Install git for dependencies pulled from GitHub
+RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
+
 # Enable bytecode compilation
 ENV UV_COMPILE_BYTECODE=1
 
@@ -21,6 +24,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # Then, add the rest of the project source code and install it
 # Installing separately from its dependencies allows optimal layer caching
 ADD . /app
+
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev
 
@@ -33,5 +37,4 @@ ENTRYPOINT []
 CMD ["uv", "run", "/app/services/trades/src/trades/main.py"]
 
 # If you want to debug the file system, uncomment the line below
-# This will keep the container running and allow you to exec into it
 # CMD ["/bin/bash", "-c", "sleep 999999"]

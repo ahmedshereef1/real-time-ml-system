@@ -1,5 +1,7 @@
 from datetime import timedelta
 
+# Ensure referencing.jsonschema is available for confluent_kafka.
+import referencing.jsonschema  # noqa: F401
 from loguru import logger
 from quixstreams import Application
 
