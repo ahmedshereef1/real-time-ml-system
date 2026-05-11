@@ -41,8 +41,8 @@ metadata:
     strimzi.io/kraft: enabled
 spec:
   kafka:
-    version: 4.1.1
-    metadataVersion: 4.1-IV0
+    version: 3.8.0
+    metadataVersion: 3.8-IV0
     listeners:
       - name: plain
         port: 9092
@@ -59,15 +59,15 @@ spec:
 
           brokers:
             - broker: 0
-              advertisedHost: 127.0.0.1
+              advertisedHost: 172.100.0.2
               nodePort: 31234
 
             - broker: 1
-              advertisedHost: 127.0.0.1
+              advertisedHost: 172.100.0.2
               nodePort: 31235
 
             - broker: 2
-              advertisedHost: 127.0.0.1
+              advertisedHost: 172.100.0.2
               nodePort: 31236
 
     config:
