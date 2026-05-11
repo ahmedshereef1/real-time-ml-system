@@ -35,9 +35,9 @@
     // 3. Use 'runArgs' to pass arguments to the container.
     // run the container with all GPUs
     "runArgs": [
-        "--cpus", "16",
-        "--memory", "16g",
-        "--memory-swap", "16g"
+        "--gpus",
+        "all",
+        "--privileged"
     ],
     // 4. Features to add to the Dev Container. More info: https://containers.dev/implementors/features.
     "features": {
@@ -55,7 +55,7 @@
 
 
         // dind
-        "ghcr.io/devcontainers/features/docker-in-docker": {},
+        // "ghcr.io/devcontainers/features/docker-in-docker": {},
 
         // direnv ENV helper
         "ghcr.io/devcontainers-extra/features/direnv:1": {},
@@ -71,6 +71,9 @@
 
         // kind
         "ghcr.io/devcontainers-extra/features/kind:1": {},
+
+        // docker cli with host socket
+        "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {},
 
         // psql command line client
         "ghcr.io/rails/devcontainer/features/postgres-client:1.1.2": {}
