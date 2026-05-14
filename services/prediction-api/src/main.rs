@@ -15,24 +15,39 @@ use axum::{
 };
 use std::env;
 mod routes;
+mod db;
 use routes::health::health;
 use routes::prediction::get_prediction;
 
+#[derive(Clone)]
+struct AppState {
+    pool: sqlx::PgPool,
+}
 
 // This is how you denote the entrypoint of a Rust program that uses async with tokio
 #[tokio::main]
 async fn main() {
+    // Create a single PgPool at start up
+    tracing_subscriber::fmt::init();
+    let pool = db::get_pool().await;
+
+    // Create the app state struct 
+    let app_state = AppState { pool };
 
     // build our application with a route
     let app = Router::new()
         // `GET /health` goes to `health`
         .route("/health", get(health))
-        .route("/prediction", get(get_prediction));
+        .route("/prediction", get(get_prediction))
+        .with_state(app_state);
+
     // run our app with hyper, listening globally on port 
-    let port = env::var("PREDICTION_API_PORT").unwrap();
+    let port = env::var("PREDICTION_API_PORT").expect("PREDICTION_API_PORT must be set");
     let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", port))
         .await
-        .unwrap();
+        .expect("Failed to bind to port");
+
+    tracing::info!("Listening on port {port}");
 
     axum::serve(listener, app)
         .await.unwrap();
