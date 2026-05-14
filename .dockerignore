@@ -18,6 +18,7 @@ venv.bak/
 .pytest_cache/
 .coverage
 htmlcov/
+eda_report.html
 
 # IDE
 .idea/
