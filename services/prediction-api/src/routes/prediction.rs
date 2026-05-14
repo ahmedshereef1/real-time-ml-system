@@ -4,7 +4,7 @@ use axum::{
 };
 use serde::{Deserialize, Serialize};
 use sqlx::postgres::PgPoolOptions;
-
+use std::env;
 
 #[derive(Deserialize)]
 pub struct PredictionParams {
@@ -20,11 +20,12 @@ pub struct PredictionOutput {
 pub async fn get_prediction(params: Query<PredictionParams>) -> Json<PredictionOutput> {
     let pair: &String = &params.0.pair;
 
+    let database_url = env::var("PREDICTION_API_DATABASE_URL").unwrap();
     // Create a connection pool so we can take to RisingWave (which under the hood os 
     // a postgres + other things)
     let pool = PgPoolOptions::new()
         .max_connections(5)
-        .connect("postgres://root:123@localhost:4567/dev")
+        .connect(&database_url)
         .await.unwrap();
 
     let query = format!("SELECT pair , predicted_price FROM public.price_predictions WHERE pair = '{}'", pair);

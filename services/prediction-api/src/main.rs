@@ -13,6 +13,7 @@ use axum::{
     routing::get, 
     Router,
 };
+use std::env;
 mod routes;
 use routes::health::health;
 use routes::prediction::get_prediction;
@@ -27,8 +28,9 @@ async fn main() {
         // `GET /health` goes to `health`
         .route("/health", get(health))
         .route("/prediction", get(get_prediction));
-    // run our app with hyper, listening globally on port 3009
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3009")
+    // run our app with hyper, listening globally on port 
+    let port = env::var("PREDICTION_API_PORT").unwrap();
+    let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", port))
         .await
         .unwrap();
 
