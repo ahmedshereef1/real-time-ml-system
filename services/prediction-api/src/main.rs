@@ -9,30 +9,51 @@ The server will start and listen for incoming requests on the specified port. Yo
 /* cargo install cargo-watch then  cargo watch -x run */
 /* curl -sS http://127.0.0.1:3009/ */
 
+mod routes;
+mod db;
+mod config;
+
 use axum::{
     routing::get, 
     Router,
 };
-use std::env;
-mod routes;
-mod db;
+use sqlx::PgPool;
+use log::info;
+
 use routes::health::health;
 use routes::prediction::get_prediction;
+use config::Config;
 
 #[derive(Clone)]
 struct AppState {
-    pool: sqlx::PgPool,
+    pool: PgPool,
+    config: Config,
 }
 
 // This is how you denote the entrypoint of a Rust program that uses async with tokio
 #[tokio::main]
 async fn main() {
-    // Create a single PgPool at start up
-    tracing_subscriber::fmt::init();
-    let pool = db::get_pool().await;
+    
+    // Start the logger as early as possible as you can
+    env_logger::init();
+    info!("starting up");
+
+    // Load environment into a config struct
+    let config: Config = Config::from_env(); 
+
+    // Creating a single PgPool at start up
+    info!("Creating pg pool...");
+    let pool = db::get_pool(
+        &config.pg_host,
+        &config.pg_port,
+        &config.pg_database,
+        &config.pg_user,
+        &config.pg_password,
+    ).await;
+    info!("Created pg pool!");
 
     // Create the app state struct 
-    let app_state = AppState { pool };
+    let app_state = AppState { pool, config: config.clone() };
 
     // build our application with a route
     let app = Router::new()
@@ -42,13 +63,8 @@ async fn main() {
         .with_state(app_state);
 
     // run our app with hyper, listening globally on port 
-    let port = env::var("PREDICTION_API_PORT").expect("PREDICTION_API_PORT must be set");
-    let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", port))
-        .await
-        .expect("Failed to bind to port");
-
-    tracing::info!("Listening on port {port}");
-
+    // let port = env::var("PREDICTION_API_PORT").expect("PREDICTION_API_PORT must be set");
+    let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", &config.api_port)).await.unwrap();
     axum::serve(listener, app)
         .await.unwrap();
 }

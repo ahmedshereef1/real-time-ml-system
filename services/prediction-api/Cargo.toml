@@ -11,3 +11,6 @@ serde_json = "1"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 sqlx = { version = "0.8", features = [ "runtime-tokio", "tls-native-tls", "postgres" ] }
+config = "0.15.23"
+log = "0.4.29"
+env_logger = "0.11.10"

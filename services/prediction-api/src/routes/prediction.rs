@@ -3,6 +3,8 @@ use axum::{
     Json,
 };
 use serde::{Deserialize, Serialize};
+use log::info;
+
 use crate::AppState;
 
 #[derive(Deserialize)]
@@ -22,10 +24,13 @@ pub async fn get_prediction(
 ) -> Json<PredictionOutput> {
 
     let pair: &String = &params.0.pair;
+    info!("Requested prediction");
 
-   let pool = &app_state.pool;
+    let pool = &app_state.pool;
+    let pg_view = app_state.config.pg_view_name;
 
-    let query = format!("SELECT pair , predicted_price FROM public.price_predictions WHERE pair = '{}'", pair);
+    // let query = format!("SELECT pair , predicted_price FROM public.price_predictions WHERE pair = '{}'", pair);
+    let query = format!("SELECT pair, predicted_price FROM public.{} WHERE pair = '{}'", pg_view, pair);
 
     // If we want to return the prediction for a specific pair, we can do:
     let prediction_output  = sqlx::query_as::<_, PredictionOutput>
@@ -37,14 +42,7 @@ pub async fn get_prediction(
         predicted_price: prediction_output.predicted_price,
     });
 
-    // If we want to return all the predictions for all pairs, we can do:
-    // let prediction_output  = sqlx::query_as::<_, PredictionOutput>
-    //     (&query)
-    //     .fetch_all(&pool).await.unwrap();
-    // let output = prediction_output.iter()
-    //     .map(|p| format!("The price prediction for pair: {} is {}", p.pair, p.predicted_price))
-    //     .collect::<Vec<_>>()
-    //     .join("\n");
+    info!("Returning prediction to the client");
 
     return output;
 }
