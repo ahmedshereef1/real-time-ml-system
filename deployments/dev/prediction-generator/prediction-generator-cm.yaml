@@ -5,7 +5,6 @@ metadata:
   name: prediction-generator
   namespace: rwml
 data:
-  # Quote them!!! - by Marius
   # https://12factor.net/config
   MLFLOW_TRACKING_URI: "http://mlflow-tracking.mlflow.svc.cluster.local:80"
   MLFLOW_TRACKING_USERNAME: "user"
