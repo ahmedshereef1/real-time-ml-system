@@ -30,6 +30,7 @@ members = [
     "services/candles",
     "services/technical_indicators",
     "services/predictor",
+    "services/news",
 ]
 
 [tool.uv.sources]
