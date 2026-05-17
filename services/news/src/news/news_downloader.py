@@ -79,12 +79,13 @@ class NewsDownloader:
     This class is used to download news from the NewsData.io API.
     Free plan: 200 credits/day, no billing required.
     Sign up at: https://newsdata.io
+    Another website but need billing: Cryptopanic API.
     """
 
-    NEWSDATA_URL = 'https://newsdata.io/api/1/latest'
+    CRYPTOCOMPARE_URL = 'https://min-api.cryptocompare.com/data/v2/news/'
 
-    def __init__(self, coinmarketcap_api_key: str):
-        self.api_key = coinmarketcap_api_key
+    def __init__(self, cryptocompare_api_key: str):
+        self.api_key = cryptocompare_api_key
 
     def get_news(self, max_pages: Optional[int] = None) -> List[News]:
         """
@@ -114,80 +115,86 @@ class NewsDownloader:
         return news
 
     def _get_batch_of_news(
-        self, next_page: Optional[str]
+        self, last_ts: Optional[str]
     ) -> Tuple[List[News], Optional[str]]:
         """
-        Connects to the NewsData.io API and fetches one batch of news.
+        Fetches one page of news from CryptoCompare.
 
         Args:
-            next_page: The pagination cursor token from the previous response.
+            last_ts: Unix timestamp to fetch news older than this (for pagination).
 
         Returns:
-            A tuple containing the list of news and the next page token.
+            A tuple of (list of News, next last_ts for pagination or None).
         """
+        headers = {'authorization': f'Apikey {self.api_key}'}
         params = {
-            'apikey': self.api_key,
-            'language': 'en',
-            'prioritydomain': 'top',
-            'q': 'bitcoin OR ethereum OR solana OR XRP OR BTC OR ETH OR SOL OR crypto',
-            'category': 'technology',
+            'lang': 'EN',
+            'sortOrder': 'latest',
+            'categories': 'BTC,ETH,SOL,XRP,Blockchain,Mining,Technology',
         }
-        if next_page:
-            params['page'] = next_page
+        if last_ts is not None:
+            params['lTs'] = last_ts  # fetch articles older than this timestamp
 
         try:
-            response = requests.get(self.NEWSDATA_URL, params=params)
+            response = requests.get(
+                self.CRYPTOCOMPARE_URL, headers=headers, params=params
+            )
             response.raise_for_status()
             data = response.json()
         except Exception as e:
-            logger.error(f'Error fetching/parsing NewsData.io news: {e}')
+            logger.error(f'Error fetching/parsing CryptoCompare news: {e}')
             return [], None
 
-        results = data.get('results', [])
+        if data.get('Type') != 100:
+            logger.error(
+                f'CryptoCompare API error: {data.get("Message", "Unknown error")}'
+            )
+            return [], None
 
-        # parse the API response into a list of News objects
-        # filter by crypto keywords in title
+        results = data.get('Data', [])
+
         news = []
+        oldest_ts = None
+
         for item in results:
             title = (item.get('title') or '').lower()
+
+            # filter: keep only articles mentioning crypto keywords
             if not any(keyword in title for keyword in CRYPTO_KEYWORDS):
                 continue
 
-            # newsdata uses a string article_id, convert to int
-            article_id = abs(hash(item['article_id'])) % (10**9)
+            # CryptoCompare uses integer unix timestamps
+            published_unix: int = item.get('published_on', 0)
+            published_at = datetime.utcfromtimestamp(published_unix).strftime(
+                '%Y-%m-%dT%H:%M:%SZ'
+            )
 
-            # pubDate format: "2024-12-18 12:29:27" → ISO Z format
-            published_raw = item.get('pubDate') or ''
-            try:
-                published_at = datetime.strptime(
-                    published_raw, '%Y-%m-%d %H:%M:%S'
-                ).strftime('%Y-%m-%dT%H:%M:%SZ')
-            except Exception:
-                published_at = published_raw
+            # track the oldest timestamp for pagination cursor
+            if oldest_ts is None or published_unix < oldest_ts:
+                oldest_ts = published_unix
 
             news.append(
                 News(
-                    id=article_id,
+                    id=item.get('id', abs(hash(item.get('title', ''))) % (10**9)),
                     title=item.get('title') or '',
-                    description=item.get('description') or '',
+                    description=item.get('body') or '',
                     published_at=published_at,
                     created_at=published_at,
                 )
             )
 
-        # extract the next page token from the API response
-        next_page_token = data.get('nextPage')
+        # if we got a full batch (50 items), there may be more pages
+        next_last_ts = oldest_ts if len(results) == 50 else None
 
-        return news, next_page_token
+        return news, next_last_ts
 
 
 if __name__ == '__main__':
     from news.config import config
 
-    news_downloader = NewsDownloader(
-        coinmarketcap_api_key=config.coinmarketcap_api_key,
-    )
-    news = news_downloader.get_news(max_pages=1)
+    news_downloader = NewsDownloader(cryptocompare_api_key=config.cryptocompare_api_key)
+    # limit to 2 pages for testing
+    news = news_downloader.get_news(max_pages=2)
 
     for news_item in news:
         print(news_item.id)
