@@ -21,6 +21,7 @@ members = [
     "candles",
     "crypto-predictor-system",
     "news",
+    "news-sentiment",
     "predictor",
     "technical-indicators",
     "trades",
@@ -2564,6 +2565,11 @@ requires-dist = [
     { name = "quixstreams", specifier = ">=3.23.4" },
     { name = "referencing", specifier = "==0.36.0" },
 ]
+
+[[package]]
+name = "news-sentiment"
+version = "0.1.0"
+source = { editable = "services/news-sentiment" }
 
 [[package]]
 name = "notebook"
