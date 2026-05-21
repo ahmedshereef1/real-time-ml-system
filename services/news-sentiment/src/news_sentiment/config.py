@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     kafka_consumer_group: str
 
     # LLM model to use, and optionally the base URL of the LLM server.
-    # model: str
+    model: str
     # base_url: Optional[str] = None
 
 
