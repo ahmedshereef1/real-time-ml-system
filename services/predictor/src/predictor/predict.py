@@ -2,6 +2,7 @@
 #  direnv exec . uv run src/predictor/predict.py
 #
 
+import time
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -127,7 +128,21 @@ def predict(
         )
 
         # Write dataframe to the `risingwave_output_table`
-        rw.insert(table_name=risingwave_output_table, data=output)
+        for attempt in range(3):
+            try:
+                rw.insert(table_name=risingwave_output_table, data=output)
+                return
+            except Exception:
+                logger.exception(
+                    'Failed to write predictions to RisingWave '
+                    f'(attempt {attempt + 1}/3)'
+                )
+                if attempt < 2:
+                    time.sleep(2 * (attempt + 1))
+
+        logger.warning(
+            'Skipping this prediction batch after repeated RisingWave write failures'
+        )
 
     rw.on_change(
         subscribe_from=risingwave_input_table,

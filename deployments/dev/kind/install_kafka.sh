@@ -15,6 +15,11 @@ kubectl rollout status deployment/strimzi-cluster-operator -n kafka --timeout=30
 echo "Giving Strimzi operator time to initialize..."
 sleep 15
 
+# This dev cluster runs a single Strimzi operator replica, so leader election
+# only adds lease flapping and crash loops when the lease cannot be renewed.
+kubectl -n kafka set env deployment/strimzi-cluster-operator STRIMZI_LEADER_ELECTION_ENABLED=false
+kubectl rollout status deployment/strimzi-cluster-operator -n kafka --timeout=300s
+
 kubectl apply -f manifests/kafka-e11b.yaml
 
 # Wait for Kafka broker to be ready
