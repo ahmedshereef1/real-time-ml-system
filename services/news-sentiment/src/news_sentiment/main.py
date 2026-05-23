@@ -51,7 +51,7 @@ def run(
         # TODO: feel free to use both the `title` and the `description` fields of the
         # news_item dictionary
         # + ' ' + news_item.get('description', '')
-        news: str = news_item['title'] + ' ' + news_item.get('description', '')
+        news: str = news_item['title']
 
         # use the LLM based sentiment extractor to map the news string to SentimentScores
         output = sentiment_extractor.extract_sentiment_scores(news)
