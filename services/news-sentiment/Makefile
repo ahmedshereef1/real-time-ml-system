@@ -17,3 +17,8 @@ tricky-example:
 curate-dataset:
 	uv run src/news_sentiment/curate_dataset.py \
     --dataset_name news-sentiment-dataset-live
+
+evaluate:
+	uv run src/news_sentiment/evaluate.py \
+    --dataset_name news-sentiment-dataset-live \
+    --model $(MODEL)
