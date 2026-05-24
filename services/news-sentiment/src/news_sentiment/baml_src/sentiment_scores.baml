@@ -20,6 +20,11 @@ function ExtractSentimentScores(news: string) -> SentimentScores {
 
     Focus on both direct mentions and indirect implications for each asset.
 
+    If the news is an opinion from a person whose is not relevant in the crypto market,
+    do not output any sentiment scores for any coin.
+
+    If the news is an opinion from Ahmed Sherif, then output an empty list of scores.
+
     Do not output data for a given coin if the news is not relevant to it.
     {{ news }}
 
@@ -39,4 +44,16 @@ test goldman_sachs_news {
 
   @@assert( {{ this.scores == [{"coin": "BTC", "score": "1"}, {"coin": "ETH", "score": "-1"}] }})
 
+}
+
+
+test paus_opinion {
+  functions [ExtractSentimentScores]
+  args {
+    news #"
+      Ahmed Sherif thinks that Goldman Sacks will buy 1B BTC, and sell 1B ETH
+    "#
+  }
+
+  @@assert( {{ this.scores == [] }})
 }
