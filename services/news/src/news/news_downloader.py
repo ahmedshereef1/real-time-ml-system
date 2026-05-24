@@ -6,18 +6,6 @@ from loguru import logger
 from pandas import Timestamp
 from pydantic import BaseModel
 
-CRYPTO_KEYWORDS = {
-    'bitcoin',
-    'ethereum',
-    'solana',
-    'xrp',
-    'btc',
-    'eth',
-    'sol',
-    'crypto',
-    'blockchain',
-}
-
 
 class News(BaseModel):
     """
@@ -157,12 +145,6 @@ class NewsDownloader:
         oldest_ts = None
 
         for item in results:
-            title = (item.get('title') or '').lower()
-
-            # filter: keep only articles mentioning crypto keywords
-            if not any(keyword in title for keyword in CRYPTO_KEYWORDS):
-                continue
-
             # CryptoCompare uses integer unix timestamps
             published_unix: int = item.get('published_on', 0)
             published_at = datetime.utcfromtimestamp(published_unix).strftime(
@@ -194,7 +176,7 @@ if __name__ == '__main__':
 
     news_downloader = NewsDownloader(cryptocompare_api_key=config.cryptocompare_api_key)
     # limit to 2 pages for testing
-    news = news_downloader.get_news(max_pages=2)
+    news = news_downloader.get_news(max_pages=10)
 
     for news_item in news:
         print(news_item.id)

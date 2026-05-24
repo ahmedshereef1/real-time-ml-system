@@ -23,7 +23,7 @@ class NewsDataSource(StatefulSource):
         while self.running:
             # download news
             # the output is sorted by published_at in increasing order
-            news = self.news_downloader.get_news(max_pages=2)
+            news = self.news_downloader.get_news(max_pages=10)
 
             # keep only the news that was published after the last published news
             if last_published_at is not None:
